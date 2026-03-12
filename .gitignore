@@ -1,0 +1,13 @@
+data/
+output/
+
+*.DAT
+*.root
+*.gz
+*.xz
+
+muon_histogram
+*.o
+
+__pycache__/
+*.pyc

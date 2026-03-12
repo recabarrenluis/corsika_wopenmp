@@ -1,0 +1,1 @@
+CORSIKA reader with OpenMP
