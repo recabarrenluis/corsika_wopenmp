@@ -15,12 +15,18 @@
 
 #include <TClass.h>
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <root_file>\n";
+        return 1;
+    }
 
     double t0 = omp_get_wtime();
 
     // these lines are necessary to prevent multithreading crush when reading root files
-    const char* filename = "DAT150010.root";
+    std::string filepath = std::string("./data/") + argv[1];
+    const char* filename = filepath.c_str();
     ROOT::EnableThreadSafety();
 
     gROOT->ProcessLine("#include <vector>");
@@ -35,8 +41,8 @@ int main() {
     warm_tree->SetBranchAddress("particle_type", &warm_particle_type);
     warm_tree->GetEntry(0);
 
-    warm_file.Close();	
-    
+    warm_file.Close();
+
     // after initializing root to multithreading well-functioning we open our file
     TFile file(filename, "READ");
     TTree* tree = (TTree*)file.Get("events");
@@ -51,7 +57,7 @@ int main() {
 // multithreading to load energy and particle_type from all events    
 #pragma omp parallel
 {
-    TFile f("DAT150010.root");
+    TFile f(filename);
     TTree* t = (TTree*)f.Get("events");
 
     std::vector<float>* energy = nullptr;
@@ -131,7 +137,7 @@ int main() {
 
 #pragma omp parallel
 {
-    TFile f("DAT150010.root");
+    TFile f(filename);
     TTree* t = (TTree*)f.Get("events");
 
     std::vector<float>* energy = nullptr;
@@ -175,22 +181,24 @@ int main() {
 }
 
     // --- Save histogram
-
-    TFile out("muon_histogram.root","RECREATE");
+    
+    std::string root_out = Form("./output/muon_histogram_%s", argv[1]);
+    std::string png_out  = Form("./output/muon_histogram_%s.png", argv[1]);
+    
+    TFile out(root_out.c_str(),"RECREATE");
     h_muon_energy->Write();
     out.Close();
     
     TCanvas c("c", "Muon Energy Histogram", 900, 700);
     c.SetLogx();
     c.SetLogy();
-
+    
     h_muon_energy->SetLineWidth(2);
     h_muon_energy->Draw("HIST");
-
-    c.SaveAs("muon_histogram.png");
-
-    std::cout << "Histogram saved to muon_hist.root and muon_hist.png\n";
     
+    c.SaveAs(png_out.c_str());
+    std::cout << "Histogram saved\n";
+
     double t1 = omp_get_wtime();
     std::cout << "Total runtime: " << t1 - t0 << " s\n";
 
