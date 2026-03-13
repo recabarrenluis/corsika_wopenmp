@@ -1,5 +1,6 @@
 import ROOT
 import numpy as np
+import argparse
 from corsikaio import CorsikaParticleFile, as_dict
 from numba import njit
 
@@ -7,9 +8,15 @@ from numba import njit
 def sec_energy(px, py, pz):
     return np.sqrt(px**2 + py**2 + pz**2)
 
-simfile = 'DAT150010'
+parser = argparse.ArgumentParser()
+parser.add_argument('--corsika', type=str, help='DAT file')
+parser.add_argument('--output', type=str, help='path_to_write')
+args = parser.parse_args()
+
+path_to_data = '/home/lure_wsl/5_HPC_exam/' #edit yours
+simfile = path_to_data + args.corsika
 nev = 100
-output_file = simfile + ".root"
+output_file = args.output + '/' + args.corsika + ".root"
 
 # Open output ROOT file
 f_out = ROOT.TFile(output_file, "RECREATE")
