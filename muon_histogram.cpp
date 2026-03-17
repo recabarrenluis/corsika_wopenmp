@@ -14,6 +14,7 @@
 #include <TString.h>
 
 #include <TClass.h>
+#include <TParameter.h>
 
 int main(int argc, char* argv[]) {
 
@@ -49,6 +50,23 @@ int main(int argc, char* argv[]) {
 
     int nEvents = tree->GetEntries();
 
+    // --- Read primary info
+    auto primary_energy  = (TParameter<float>*)file.Get("primary_energy");
+    auto primary_zenith  = (TParameter<float>*)file.Get("primary_zenith");
+    auto primary_azimuth = (TParameter<float>*)file.Get("primary_azimuth");
+    auto primary_type    = (TParameter<int>*)file.Get("primary_type");
+
+    std::cout << "=== PRIMARY INFO ===\n";
+    if (primary_energy)
+        std::cout << "Energy  = " << primary_energy->GetVal() << std::endl;
+    if (primary_zenith)
+        std::cout << "Zenith  = " << primary_zenith->GetVal() << std::endl;
+    if (primary_azimuth)
+        std::cout << "Azimuth = " << primary_azimuth->GetVal() << std::endl;
+    if (primary_type)
+        std::cout << "Type    = " << primary_type->GetVal() << std::endl;
+    
+    return 0;
     //find energy range (for histogram bin) and total muons
     double global_min = 1e30;
     double global_max = -1e30;
