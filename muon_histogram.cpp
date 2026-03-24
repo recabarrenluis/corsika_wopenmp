@@ -16,13 +16,15 @@
 #include <TClass.h>
 #include <TParameter.h>
 
+// DAT.root as parsed argument
 int main(int argc, char* argv[]) {
 
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <root_file>\n";
         return 1;
     }
-
+    
+    // runtime computation
     double t0 = omp_get_wtime();
 
     // these lines are necessary to prevent multithreading crush when reading root files
@@ -50,13 +52,13 @@ int main(int argc, char* argv[]) {
 
     int nEvents = tree->GetEntries();
 
-    // --- Read primary info
+    // Read primary info
     auto primary_energy  = (TParameter<float>*)file.Get("primary_energy");
     auto primary_zenith  = (TParameter<float>*)file.Get("primary_zenith");
     auto primary_azimuth = (TParameter<float>*)file.Get("primary_azimuth");
     auto primary_type    = (TParameter<int>*)file.Get("primary_type");
 
-    std::cout << "=== PRIMARY INFO ===\n";
+    std::cout << "*** PRIMARY INFO ***\n";
     if (primary_energy)
         std::cout << "Energy  = " << primary_energy->GetVal() << std::endl;
     if (primary_zenith)
@@ -66,7 +68,6 @@ int main(int argc, char* argv[]) {
     if (primary_type)
         std::cout << "Type    = " << primary_type->GetVal() << std::endl;
     
-    return 0;
     //find energy range (for histogram bin) and total muons
     double global_min = 1e30;
     double global_max = -1e30;
@@ -84,6 +85,7 @@ int main(int argc, char* argv[]) {
     t->SetBranchAddress("energy", &energy);
     t->SetBranchAddress("particle_type", &particle_type);
 
+    // energy min/max variables (useful for histogram later) and particle counter
     double local_min = 1e30;
     double local_max = -1e30;
     long long local_count = 0;
@@ -99,14 +101,16 @@ int main(int argc, char* argv[]) {
         for(int j = 0; j < n; j++)
         {
             short pid = particle_type->at(j);
-
+            // particle filter. 
             if(pid == 5 || pid == 6)
             {
                 float e = energy->at(j);
 
+		// energy min/max 
                 if(e < local_min) local_min = e;
                 if(e > local_max) local_max = e;
 
+		// particle counter  
                 local_count++;
             }
         }
@@ -123,13 +127,13 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Total muons = " << total_muons << std::endl;
 
-    // --- Compute number of bins
+    // compute number of bins
 
     int bins = static_cast<int>(sqrt(total_muons));
 
     std::cout << "Histogram bins = " << bins << std::endl;
 
-    // --- Logarithmic bin edges
+    // logarithmic bin edges
 
     std::vector<double> bin_edges(bins + 1);
 

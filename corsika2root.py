@@ -1,8 +1,12 @@
 import ROOT
 import numpy as np
 import argparse
+import ctypes
+from array import array
+from ROOT import std
 from corsikaio import CorsikaParticleFile, as_dict
 from numba import njit
+
 
 @njit(nopython=True)
 def sec_energy(px, py, pz):
@@ -23,11 +27,6 @@ f_out = ROOT.TFile(output_file, "RECREATE")
 tree = ROOT.TTree("events", "corsika c++ readable")
 
 # Define C++ vectors
-from array import array
-import ctypes
-
-from ROOT import std
-
 energy = std.vector('float')()
 particle_type = std.vector('short')()
 pos_x = std.vector('float')()
@@ -43,7 +42,7 @@ tree.Branch("time", time)
 
 # Fill tree
 with CorsikaParticleFile(simfile) as f:
-    # --- First event header (primary info)
+    # First event header (primary info)
     event0 = next(f)
     hdr0 = as_dict(event0.header)
 
@@ -98,7 +97,7 @@ with CorsikaParticleFile(simfile) as f:
 
         tree.Fill()
 
-    # --- Save primary info
+    # Save primary info
     ROOT.TParameter(float)("primary_energy", primary_energy).Write()
     ROOT.TParameter(float)("primary_zenith", primary_zenith).Write()
     ROOT.TParameter(float)("primary_azimuth", primary_azimuth).Write()
